@@ -131,3 +131,28 @@ form.addEventListener('submit', (e) => handleSubmit(e));
 clearBtn.addEventListener('click', (e) => reset(e));
 
 init();
+
+const UNSPLASH_API_KEY = 'UnVmQOiZyvfPMKR0iR4oB1xGfkTwb2vvKxrMECdlXc4';
+const unsplashURL = `https://api.unsplash.com/photos/random?client_id=${UNSPLASH_API_KEY}`;
+
+fetch(unsplashURL)
+    .then(response => response.json())
+    .then(data => {
+        console.log('Unsplash API 응답:', data);  // 응답 구조 확인
+
+        // 데이터가 배열이 아니어도 첫 번째 객체로 접근할 수 있도록 수정
+        const imageData = Array.isArray(data) ? data[0] : data;  // 배열이 아닌 경우, 객체로 처리
+
+        // 이미지 URL이 존재하는지 확인
+        const imageUrl = imageData?.urls?.regular;
+
+        if (imageUrl) {
+            // 이미지 URL을 이미지 태그에 설정
+            document.getElementById('random-image').src = imageUrl;
+        } else {
+            console.error('이미지 URL이 없습니다. 응답 데이터:', imageData);
+        }
+    })
+    .catch(error => {
+        console.error('Error fetching image from Unsplash:', error);
+    });
