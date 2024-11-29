@@ -111,7 +111,7 @@ class HeroWithAutoFire extends Hero {
             if (heroSub2) {
                 gameObjects.push(new Laser(heroSub2.x - 120, heroSub2.y - 10)); // heroSub2 자동 발사
             }
-        }, 800); // 300ms마다 자동 발사
+        }, 800); // 800ms마다 자동 발사
     }
 }
 
@@ -232,7 +232,6 @@ window.onload = async() =>
                second.dead = true; 
             }, 100);
 
-            //lasergreenshot 이미지 추가 클래스 만들어줘
             });
        }
 
