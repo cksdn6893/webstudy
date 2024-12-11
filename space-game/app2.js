@@ -145,6 +145,7 @@ const Messages = {
 let heroImg, 
     enemyImg, 
     laserImg,
+    lifeImg,
     canvas, ctx, 
     gameObjects = [], 
     hero, 
@@ -190,6 +191,7 @@ window.onload = async() =>
     enemyImg = await loadTexture("assets/enemyShip.png");
     laserImg = await loadTexture("assets/laserRed.png");
     laserGreenImg = await loadTexture("assets/laserGreenShot.png");
+    lifeImg = await loadTexture("assets/life.png");
 
     function initGame() {
         gameObjects = [];
