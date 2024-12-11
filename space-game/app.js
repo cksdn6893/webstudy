@@ -44,6 +44,8 @@ let heroImg,
     gameLoopId,
     eventEmitter = new EventEmitter();
 
+let stage=1;
+
 class GameObject {
     constructor(x, y) {
         this.x = x;
@@ -78,6 +80,7 @@ class Hero extends GameObject {
         this.cooldown = 0;
         this.life = 3;
         this.points = 0;
+        
     }
 
     fire() {
@@ -109,6 +112,7 @@ class Hero extends GameObject {
 
     incrementPoints() {
         this.points += 100;
+
     }
 }
 
@@ -238,8 +242,28 @@ function createEnemies() {
     }
 }
 
+function createBoss() {
+    const ENEMY_COUNT = 1*stage; // 한 번에 생성할 적의 수 (조정 가능)
+
+    for (let i = 0; i < ENEMY_COUNT; i++) {
+        // 무작위 X 위치 (캔버스 너비 내)
+        const x = Math.random() * (canvas.width - 98); // 적의 너비를 고려하여 범위 조정
+        // 무작위 Y 위치 (화면 상단 외부에서 시작)
+        const y = Math.random() * -canvas.height+200; // 적들이 화면 밖에서 내려오도록 설정
+
+        // 적 객체 생성
+        const enemy = new Enemy(x, y);
+        enemy.img = bossimg;
+
+        // 게임 오브젝트 배열에 추가
+        gameObjects.push(enemy);
+    }
+}
+
+
+
 function randomcreateEnemies() {
-    const ENEMY_COUNT = 30; // 한 번에 생성할 적의 수 (조정 가능)
+    const ENEMY_COUNT = 10*stage; // 한 번에 생성할 적의 수 (조정 가능)
 
     for (let i = 0; i < ENEMY_COUNT; i++) {
         // 무작위 X 위치 (캔버스 너비 내)
@@ -254,6 +278,13 @@ function randomcreateEnemies() {
         // 게임 오브젝트 배열에 추가
         gameObjects.push(enemy);
     }
+}
+
+function spawnEnemiesPeriodically() {
+    setInterval(() => {
+        randomcreateEnemies(); // 적 생성 함수 호출
+        createBoss();
+    }, 5000); // 2초마다 적 생성 (시간 간격 조정 가능)
 }
 
 
@@ -316,7 +347,7 @@ function endGame(win) {
         ctx.textAlign = "center";
         ctx.fillText(
             win
-                ? "Victory!!! Press [Enter] to start a new game"
+                ? "Victory!!! Press [Enter] to start a next" + "   stage: " +(stage+1)
                 : "Game Over!!! Press [Enter] to restart",
             canvas.width / 2,
             canvas.height / 2
@@ -328,6 +359,7 @@ function resetGame() {
     if (gameLoopId) {
         clearInterval(gameLoopId); 
     }
+    stage +=1;
 
     gameObjects = [];
     smallHeroes = [];
@@ -366,24 +398,34 @@ function initGame() {
     gameObjects = []; 
     smallHeroes = []; 
 
-    createEnemies();
-    randomcreateEnemies(); 
     createHero(); 
+    if(stage==3){
+    createEnemies();
+    }
+    randomcreateEnemies(); 
+    createBoss;
+
+    spawnEnemiesPeriodically();
 
     eventEmitter.on(Messages.KEY_EVENT_UP, () => {
-        hero.y -= 5;
+        hero.y -= 10 *(4-hero.life);
         updateSmallHeroesPosition();
     });
     eventEmitter.on(Messages.KEY_EVENT_DOWN, () => {
-        hero.y += 5;
+        hero.y += 10 *(4-hero.life);
         updateSmallHeroesPosition();
     });
-    eventEmitter.on(Messages.KEY_EVENT_LEFT, () => {
-        hero.x -= 5;
+    eventEmitter.on(Messages.KEY_EVENT_LEFT, async() => {
+        hero.x -= 10 *(4-hero.life);
+
+        hero.img = await loadTexture("assets/playerLeft.png");
         updateSmallHeroesPosition();
+        console.log(hero.texture);
     });
-    eventEmitter.on(Messages.KEY_EVENT_RIGHT, () => {
-        hero.x += 5;
+    eventEmitter.on(Messages.KEY_EVENT_RIGHT, async() => {
+        hero.x += 10 *(4-hero.life);
+        
+        hero.img = await loadTexture("assets/playerRight.png");
         updateSmallHeroesPosition();
     });
     eventEmitter.on(Messages.KEY_EVENT_SPACE, () => {
@@ -395,6 +437,12 @@ function initGame() {
         first.dead = true;
         second.dead = true;
         hero.incrementPoints();
+
+        //1000점이상이면 승리조건 추가
+        if (hero.points >= 1000) {
+            eventEmitter.emit(Messages.GAME_END_WIN); // 승리 조건 만족 시 이벤트 발생
+        }
+
         if (gameObjects.filter((go) => go.type === "Enemy" && !go.dead).length === 0) {
             eventEmitter.emit(Messages.GAME_END_WIN);
         }
@@ -424,6 +472,11 @@ window.onload = async () => {
     explosionImg = await loadTexture("assets/laserGreenShot.png");
     lifeImg = await loadTexture("assets/life.png");
     starBackground = await loadTexture("assets/starBackground.png");
+    bossimg = await loadTexture("assets/enemyUFO.png");
+    enemylaserImg = await loadTexture("assets/laserGreen.png");
+    playerrightImg = await loadTexture("assets/playerRight.png");
+    playerleftImg = await loadTexture("assets/playerLeft.png");
+    playerdamageImg = await loadTexture("assets/playerDamaged.png");
 
     initGame();
     startGameLoop();
