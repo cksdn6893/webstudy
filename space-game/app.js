@@ -87,7 +87,9 @@ class Hero extends GameObject {
         if (this.canFire()) {
             const laserX = this.x + this.width / 2 - 4.5;
             const laserY = this.y - 10;
-            gameObjects.push(new Laser(laserX, laserY));
+
+        gameObjects.push(new Laser(laserX, laserY));
+
             this.cooldown = 500;
             let id = setInterval(() => {
                 if (this.cooldown > 0) {
@@ -117,18 +119,19 @@ class Hero extends GameObject {
 }
 
 class Enemy extends GameObject {
-    constructor(x, y) {
+    constructor(x, y,speed) {
         super(x, y);
         this.width = 98;
         this.height = 50;
         this.type = "Enemy";
+        this.speed=speed;
         let id = setInterval(() => {
             if (this.y < canvas.height - this.height) {
                 this.y += 5;
             } else {
                 clearInterval(id);
             }
-        }, 300);
+        }, 300-speed);
     }
 }
 
@@ -149,6 +152,8 @@ class Laser extends GameObject {
         }, 100);
     }
 }
+
+
 
 class CollisionEffect extends GameObject {
     constructor(x, y) {
@@ -197,6 +202,17 @@ function createHero() {
         canvas.height - canvas.height / 4 + (smallHeroHeight * 3) / 4
     );
 
+    //여기
+    const leftSmallHero2 = new Hero(
+        canvas.width / 2 - mainHeroWidth / 2 - smallHeroWidth - 50,
+        canvas.height - canvas.height / 4 + (smallHeroHeight * 3) / 4
+    );
+    const rightSmallHero2 = new Hero(
+        canvas.width / 2 + mainHeroWidth / 2 + 50,
+        canvas.height - canvas.height / 4 + (smallHeroHeight * 3) / 4
+    );
+//
+
     leftSmallHero.img = heroImg;
     rightSmallHero.img = heroImg;
 
@@ -205,10 +221,27 @@ function createHero() {
     rightSmallHero.width = smallHeroWidth;
     rightSmallHero.height = smallHeroHeight;
 
+    //
+    leftSmallHero2.img = heroImg;
+    rightSmallHero2.img = heroImg;
+    leftSmallHero2.width = smallHeroWidth;
+    leftSmallHero2.height = smallHeroHeight;
+    rightSmallHero2.width = smallHeroWidth;
+    rightSmallHero2.height = smallHeroHeight;
+//
+
+
     gameObjects.push(leftSmallHero);
     gameObjects.push(rightSmallHero);
 
+    gameObjects.push(leftSmallHero2);
+    gameObjects.push(rightSmallHero2);
+
+
     smallHeroes.push(leftSmallHero, rightSmallHero);
+
+    smallHeroes.push(leftSmallHero2, rightSmallHero2);
+
 }
 
 let autoAttackTimers = []; 
@@ -222,6 +255,8 @@ function startAutoAttack() {
             if (!smallHero.dead) {
                 smallHero.fire();
             }
+            smallHeroes[2].x +=10;
+            smallHeroes[3].x +=10;
         }, 1000);
         autoAttackTimers.push(timerId); 
     });
@@ -235,7 +270,7 @@ function createEnemies() {
     const STOP_X = START_X + MONSTER_WIDTH;
     for (let x = START_X; x < STOP_X; x += 98) {
         for (let y = 0; y < 50 * 5; y += 50) {
-            const enemy = new Enemy(x, y);
+            const enemy = new Enemy(x, y,0);
             enemy.img = enemyImg;
             gameObjects.push(enemy);
         }
@@ -252,7 +287,7 @@ function createBoss() {
         const y = Math.random() * -canvas.height+200; // 적들이 화면 밖에서 내려오도록 설정
 
         // 적 객체 생성
-        const enemy = new Enemy(x, y);
+        const enemy = new Enemy(x, y,200);
         enemy.img = bossimg;
 
         // 게임 오브젝트 배열에 추가
@@ -272,7 +307,7 @@ function randomcreateEnemies() {
         const y = Math.random() * -canvas.height; // 적들이 화면 밖에서 내려오도록 설정
 
         // 적 객체 생성
-        const enemy = new Enemy(x, y);
+        const enemy = new Enemy(x, y,10);
         enemy.img = enemyImg;
 
         // 게임 오브젝트 배열에 추가
@@ -284,7 +319,9 @@ function spawnEnemiesPeriodically() {
     setInterval(() => {
         randomcreateEnemies(); // 적 생성 함수 호출
         createBoss();
+        
     }, 5000); // 2초마다 적 생성 (시간 간격 조정 가능)
+    
 }
 
 
@@ -392,6 +429,7 @@ function updateSmallHeroesPosition() {
 
     smallHeroes[1].x = hero.x + hero.width + 10;
     smallHeroes[1].y = hero.y + offsetY;
+
 }
 
 function initGame() {
@@ -399,13 +437,14 @@ function initGame() {
     smallHeroes = []; 
 
     createHero(); 
-    if(stage==3){
+    if(stage%3==0){
     createEnemies();
     }
     randomcreateEnemies(); 
     createBoss;
 
     spawnEnemiesPeriodically();
+
 
     eventEmitter.on(Messages.KEY_EVENT_UP, () => {
         hero.y -= 10 *(4-hero.life);
@@ -439,7 +478,7 @@ function initGame() {
         hero.incrementPoints();
 
         //1000점이상이면 승리조건 추가
-        if (hero.points >= 1000) {
+        if (hero.points >= 1000*stage) {
             eventEmitter.emit(Messages.GAME_END_WIN); // 승리 조건 만족 시 이벤트 발생
         }
 

@@ -74,12 +74,13 @@ class Enemy extends GameObject {
     // 적 캐릭터의 자동 이동 (Y축 방향)
     let id = setInterval(() => {
     if (this.y < canvas.height - this.height) {
-    this.y += 5; // 아래로 이동
-    } else {
+    this.y += 5000; // 아래로 이동
+    } 
+    else {
     console.log('Stopped at', this.y);
     clearInterval(id); // 화면 끝에 도달하면 정지
     }
-    }, 300);
+    }, 1);
     }
 }
 
