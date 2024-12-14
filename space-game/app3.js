@@ -75,14 +75,14 @@ class Hero extends GameObject {
     constructor(x, y) {
         super(x, y);
         this.width = 99;
-        this.height = 75;
+        this.height = 75;  
         this.type = "Hero";
         this.cooldown = 0;
         this.life = 3;
         this.points = 0;
-
         this.charge = 0; // 레이저 충전 상태
         this.isCharging = false; // 충전 중인지 여부
+        this.check= false; // 특별한 레이저인지 체크크
         
     }
 
@@ -123,10 +123,12 @@ class Hero extends GameObject {
 
     startCharging() {
         this.isCharging = true;
+        this.check=true;
         this.charge = 0;
+        
         const chargeInterval = setInterval(() => {
-            if (this.isCharging && this.charge < 1000) { // 최대 충전치 100
-                this.charge += 10;
+            if (this.isCharging && this.charge < 750) { // 최대 충전치 100
+                this.charge += 25;
             } else {
                 clearInterval(chargeInterval);
             }
@@ -143,7 +145,7 @@ class Hero extends GameObject {
         if (this.canFire()) {
             const laserX = this.x + this.width / 2 - 4.5;
             const laserY = this.y - 10;
-            const laserSize = Math.min(9 + this.charge / 10, 30); // 크기 제한
+            const laserSize = Math.max(20 + this.charge/2 , 15); // 크기 제한
             gameObjects.push(new Laser(laserX, laserY, laserSize));
             this.cooldown = 500;
             let id = setInterval(() => {
@@ -164,7 +166,7 @@ class Enemy extends GameObject {
         this.height = 50;
         this.type = "Enemy";
         this.speed=speed;
-        if(speed<200){
+        if(speed<250){
         let id = setInterval(() => {
             if (this.y < canvas.height - this.height) {
                 this.y += 5;    
@@ -173,7 +175,7 @@ class Enemy extends GameObject {
             }
         }, 300-speed);
     }
-    else if(speed>200){
+    else if(speed>250){
         let id = setInterval(() => {
             if (this.y < canvas.height - this.height) {
                 this.x += 5;    
@@ -195,6 +197,7 @@ class Laser extends GameObject {
         this.height = size*3.7;
         this.type = "Laser";
         this.img = laserImg;
+    
         let id = setInterval(() => {
             if (this.y > 0) {
                 this.y -= 15;
@@ -350,7 +353,7 @@ function createBoss() {
         const y = Math.random() * -canvas.height+200; // 적들이 화면 밖에서 내려오도록 설정
 
         // 적 객체 생성
-        const enemy = new Enemy(x, y,180);
+        const enemy = new Enemy(x, y,240);
         enemy.img = bossimg;
 
         // 게임 오브젝트 배열에 추가
@@ -368,7 +371,7 @@ function createmeteor() {
         const y = Math.random() * +canvas.height; // 적들이 화면 밖에서 내려오도록 설정
 
         // 적 객체 생성
-        const enemy = new Enemy(x, y,210);
+        const enemy = new Enemy(x, y,280);
         enemy.img = meteorimg;
 
         // 게임 오브젝트 배열에 추가
@@ -580,12 +583,21 @@ function initGame() {
     eventEmitter.on(Messages.KEY_EVENT_ENTER, resetGame);
 
     eventEmitter.on(Messages.COLLISION_ENEMY_LASER, (_, { first, second }) => {
-        first.dead = true;
-        second.dead = true;
-        hero.incrementPoints();
+            if(hero.check==true){
+                second.dead=true;
+                hero.incrementPoints();
+            }
+            else if(hero.check==false){
+            first.dead = true;
+            second.dead=true;
+            hero.incrementPoints();
+            }
 
+
+            hero.incrementPoints();
+        
         //1000점이상이면 승리조건 추가
-        if (hero.points >= 1000*stage) {
+        if (hero.points >= 1000*stage*stage) {
             eventEmitter.emit(Messages.GAME_END_WIN); // 승리 조건 만족 시 이벤트 발생
         }
 
